@@ -1,17 +1,20 @@
 defmodule BlogWeb.Schema do
   use Absinthe.Schema
   alias BlogWeb.Resolvers.{PostResolver, CommentResolver, UserResolver, SessionResolver}
-  alias Blog.Articles
+  alias Blog.{Articles, Accounts}
+  alias BlogAppWeb.Middleware.Authorize
   import Absinthe.Resolution.Helpers, only: [dataloader: 1]
 
   query do
     @desc "List users"
     field :users, list_of(:user_type) do
+      middleware(Authorize, "admin")
       resolve(&UserResolver.list_users/3)
     end
 
     @desc "List posts"
     field :posts, list_of(:post_type) do
+      middleware(Authorize, :any)
       resolve(&PostResolver.list_posts/3)
     end
   end
@@ -31,12 +34,14 @@ defmodule BlogWeb.Schema do
 
     @desc "Register post"
     field :register_post, :post_type do
+      middleware(Authorize, :any)
       arg(:input, non_null(:post_input_type))
       resolve(&PostResolver.register_post/3)
     end
 
     @desc "Register comment"
     field :register_comment, :comment_type do
+      middleware(Authorize, :any)
       arg(:input, non_null(:comment_input_type))
       resolve(&CommentResolver.register_comments/3)
     end
@@ -59,12 +64,14 @@ defmodule BlogWeb.Schema do
     field :title, :string
     field :content, :string
     field :comments, list_of(:comment_type), resolve: dataloader(Article)
+    field :user, :user_type, resolve: dataloader(Account)
   end
 
   object :comment_type do
     field :id, :id
     field :content, :string
     field :post, :post_type, resolve: dataloader(Article)
+    field :user, :user_type, resolve: dataloader(Account)
   end
 
   input_object :user_input_type do
@@ -85,9 +92,11 @@ defmodule BlogWeb.Schema do
   end
 
   def context(ctx) do
-    source = Articles.datasource()
+    article_source = Articles.datasource()
+    account_source = Accounts.datasource()
     loader = Dataloader.new()
-             |> Dataloader.add_source(Article, source)
+             |> Dataloader.add_source(Article, article_source)
+             |> Dataloader.add_source(Account, account_source)
     Map.put(ctx, :loader, loader)
   end
 

@@ -8,6 +8,7 @@ defmodule Blog.Accounts.User do
     field :first_name, :string
     field :last_name, :string
     field :password, :string
+    field :role, :string, default: "user", null: false
     has_many :posts, Post
     has_many :comments, Comment
 
