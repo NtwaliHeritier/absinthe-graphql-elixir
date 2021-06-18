@@ -18,7 +18,7 @@ defmodule BlogWeb.Schema do
 
   mutation do
     @desc "Register user"
-    field :register_user, :user_type do
+    field :register_user, :session_type do
       arg(:input, non_null(:user_input_type))
       resolve(&UserResolver.register_user/3)
     end

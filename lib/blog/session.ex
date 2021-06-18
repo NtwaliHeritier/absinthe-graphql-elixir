@@ -6,7 +6,7 @@ defmodule Blog.Session do
     user = Repo.get_by!(User, email: arg.email)
     case verify_password(user, arg) do
       true -> {:ok, user}
-      _ -> :error
+      false -> :error
     end
   end
 
